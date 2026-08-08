@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from 'react'
+import { useCallback, useMemo, useState, type KeyboardEvent } from 'react'
 import { generateOrders } from './data/generateOrders'
 import { OrderPanel } from './components/OrderPanel'
 import { OrderTable } from './components/OrderTable'
@@ -19,19 +19,28 @@ function App() {
     useUrlFilters()
   const [activeOrderNumber, setActiveOrderNumber] = useState('')
 
-  const filtered = orders.filter((order) => {
-    if (query && !order.orderNumber.toLowerCase().includes(query.toLowerCase())) {
-      return false
-    }
-    if (statuses.length > 0 && !statuses.includes(order.status)) {
-      return false
-    }
-    return true
-  })
+  const statusKey = statuses.join(',')
 
-  const selectedOrder = selected
-    ? (orders.find((order) => order.orderNumber === selected) ?? null)
-    : null
+  const filtered = useMemo(() => {
+    const statusSet = statusKey ? statusKey.split(',') : []
+    return orders.filter((order) => {
+      if (query && !order.orderNumber.toLowerCase().includes(query.toLowerCase())) {
+        return false
+      }
+      if (statusSet.length > 0 && !statusSet.includes(order.status)) {
+        return false
+      }
+      return true
+    })
+  }, [query, statusKey])
+
+  const selectedOrder = useMemo(
+    () =>
+      selected
+        ? (orders.find((order) => order.orderNumber === selected) ?? null)
+        : null,
+    [selected],
+  )
 
   const activeInList = filtered.some((order) => order.orderNumber === activeOrderNumber)
   const active =
@@ -40,52 +49,62 @@ function App() {
     filtered[0]?.orderNumber ||
     ''
 
-  function openOrder(orderNumber: string) {
-    setActiveOrderNumber(orderNumber)
-    setSelected(orderNumber)
-  }
+  const openOrder = useCallback(
+    (orderNumber: string) => {
+      setActiveOrderNumber(orderNumber)
+      setSelected(orderNumber)
+    },
+    [setSelected],
+  )
 
-  function closePanel() {
+  const onRowFocus = useCallback((orderNumber: string) => {
+    setActiveOrderNumber(orderNumber)
+  }, [])
+
+  const closePanel = useCallback(() => {
     const orderNumber = selected
     setSelected(null)
     if (orderNumber) {
       setActiveOrderNumber(orderNumber)
       focusOrderRow(orderNumber)
     }
-  }
+  }, [selected, setSelected])
 
-  function handleListKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (filtered.length === 0) return
+  const handleListKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (filtered.length === 0) return
 
-    const currentIndex = Math.max(
-      0,
-      filtered.findIndex((order) => order.orderNumber === active),
-    )
-
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      event.preventDefault()
-      const delta = event.key === 'ArrowDown' ? 1 : -1
-      const nextIndex = Math.min(
-        filtered.length - 1,
-        Math.max(0, currentIndex + delta),
+      const currentIndex = Math.max(
+        0,
+        filtered.findIndex((order) => order.orderNumber === active),
       )
-      const nextOrderNumber = filtered[nextIndex]!.orderNumber
-      setActiveOrderNumber(nextOrderNumber)
-      focusOrderRow(nextOrderNumber)
-      return
-    }
 
-    if (event.key === 'Enter' && active) {
-      event.preventDefault()
-      openOrder(active)
-      return
-    }
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault()
+        const delta = event.key === 'ArrowDown' ? 1 : -1
+        const nextIndex = Math.min(
+          filtered.length - 1,
+          Math.max(0, currentIndex + delta),
+        )
+        const nextOrderNumber = filtered[nextIndex]!.orderNumber
+        setActiveOrderNumber(nextOrderNumber)
+        focusOrderRow(nextOrderNumber)
+        return
+      }
 
-    if (event.key === 'Escape' && selected) {
-      event.preventDefault()
-      closePanel()
-    }
-  }
+      if (event.key === 'Enter' && active) {
+        event.preventDefault()
+        openOrder(active)
+        return
+      }
+
+      if (event.key === 'Escape' && selected) {
+        event.preventDefault()
+        closePanel()
+      }
+    },
+    [filtered, active, openOrder, selected, closePanel],
+  )
 
   return (
     <div className="app">
@@ -126,7 +145,7 @@ function App() {
             activeOrderNumber={active}
             selectedOrderNumber={selected}
             onRowClick={openOrder}
-            onRowFocus={setActiveOrderNumber}
+            onRowFocus={onRowFocus}
           />
         </main>
         {selectedOrder ? (

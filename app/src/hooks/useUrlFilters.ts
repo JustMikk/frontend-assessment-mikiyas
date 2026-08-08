@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 import type { OrderStatus } from '../data/generateOrders'
 
 export const ALL_STATUSES: OrderStatus[] = ['NEW', 'PICKING', 'SHIPPED', 'CANCELLED']
@@ -47,14 +47,14 @@ export function useUrlFilters() {
   const search = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   const { query, statuses, selected } = parseFilters(search)
 
-  function setQuery(next: string) {
+  const setQuery = useCallback((next: string) => {
     const params = new URLSearchParams(window.location.search)
     if (next) params.set('q', next)
     else params.delete('q')
     writeSearch(params, 'replace')
-  }
+  }, [])
 
-  function toggleStatus(status: OrderStatus) {
+  const toggleStatus = useCallback((status: OrderStatus) => {
     const params = new URLSearchParams(window.location.search)
     const current = params.getAll('status')
     params.delete('status')
@@ -63,14 +63,14 @@ export function useUrlFilters() {
       : [...current, status]
     for (const value of next) params.append('status', value)
     writeSearch(params, 'push')
-  }
+  }, [])
 
-  function setSelected(orderNumber: string | null) {
+  const setSelected = useCallback((orderNumber: string | null) => {
     const params = new URLSearchParams(window.location.search)
     if (orderNumber) params.set('selected', orderNumber)
     else params.delete('selected')
     writeSearch(params, 'push')
-  }
+  }, [])
 
   return { query, statuses, selected, setQuery, toggleStatus, setSelected }
 }
