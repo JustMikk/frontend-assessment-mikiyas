@@ -110,8 +110,9 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>Orders</h1>
-        <p className="app-meta">
-          {filtered.length.toLocaleString()} of {orders.length.toLocaleString()} orders
+        <p className="app-meta" aria-live="polite">
+          Showing {filtered.length.toLocaleString()} of{' '}
+          {orders.length.toLocaleString()} orders
         </p>
         <div className="filters">
           <label className="filter-search">
