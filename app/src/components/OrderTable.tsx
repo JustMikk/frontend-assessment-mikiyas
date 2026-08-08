@@ -2,14 +2,18 @@ import type { Order } from '../data/generateOrders'
 
 type OrderTableProps = {
   orders: Order[]
+  activeOrderNumber: string
   selectedOrderNumber: string
   onRowClick: (orderNumber: string) => void
+  onRowFocus: (orderNumber: string) => void
 }
 
 export function OrderTable({
   orders,
+  activeOrderNumber,
   selectedOrderNumber,
   onRowClick,
+  onRowFocus,
 }: OrderTableProps) {
   return (
     <table className="order-table">
@@ -24,12 +28,23 @@ export function OrderTable({
       </thead>
       <tbody>
         {orders.map((order) => {
+          const isActive = order.orderNumber === activeOrderNumber
           const isSelected = order.orderNumber === selectedOrderNumber
+          const className = [
+            isActive ? 'is-active' : '',
+            isSelected ? 'is-selected' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+
           return (
             <tr
               key={order.orderNumber}
-              className={isSelected ? 'is-selected' : undefined}
+              data-order-number={order.orderNumber}
+              tabIndex={isActive ? 0 : -1}
+              className={className || undefined}
               onClick={() => onRowClick(order.orderNumber)}
+              onFocus={() => onRowFocus(order.orderNumber)}
             >
               <td>{order.orderNumber}</td>
               <td>{order.customer}</td>
