@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useState, type KeyboardEvent } from 'react'
+import { memo, useCallback, useMemo, useState, type KeyboardEvent } from 'react'
 import { generateOrders } from './data/generateOrders'
 import { OrderPanel } from './components/OrderPanel'
 import { OrderTable } from './components/OrderTable'
+import { useFilteredOrders } from './hooks/useFilteredOrders'
 import { ALL_STATUSES, useUrlFilters } from './hooks/useUrlFilters'
 
 const orders = generateOrders(5000)
@@ -14,25 +15,16 @@ function focusOrderRow(orderNumber: string) {
   row?.scrollIntoView({ block: 'nearest' })
 }
 
+const MemoOrderTable = memo(OrderTable)
+MemoOrderTable.displayName = 'OrderTable'
+
 function App() {
   const { query, statuses, selected, setQuery, toggleStatus, setSelected } =
     useUrlFilters()
   const [activeOrderNumber, setActiveOrderNumber] = useState('')
 
   const statusKey = statuses.join(',')
-
-  const filtered = useMemo(() => {
-    const statusSet = statusKey ? statusKey.split(',') : []
-    return orders.filter((order) => {
-      if (query && !order.orderNumber.toLowerCase().includes(query.toLowerCase())) {
-        return false
-      }
-      if (statusSet.length > 0 && !statusSet.includes(order.status)) {
-        return false
-      }
-      return true
-    })
-  }, [query, statusKey])
+  const filtered = useFilteredOrders(orders, query, statusKey)
 
   const selectedOrder = useMemo(
     () =>
@@ -49,7 +41,7 @@ function App() {
     filtered[0]?.orderNumber ||
     ''
 
-  const openOrder = useCallback(
+  const handleRowClick = useCallback(
     (orderNumber: string) => {
       setActiveOrderNumber(orderNumber)
       setSelected(orderNumber)
@@ -57,7 +49,7 @@ function App() {
     [setSelected],
   )
 
-  const onRowFocus = useCallback((orderNumber: string) => {
+  const handleRowFocus = useCallback((orderNumber: string) => {
     setActiveOrderNumber(orderNumber)
   }, [])
 
@@ -94,7 +86,7 @@ function App() {
 
       if (event.key === 'Enter' && active) {
         event.preventDefault()
-        openOrder(active)
+        handleRowClick(active)
         return
       }
 
@@ -103,7 +95,7 @@ function App() {
         closePanel()
       }
     },
-    [filtered, active, openOrder, selected, closePanel],
+    [filtered, active, handleRowClick, selected, closePanel],
   )
 
   return (
@@ -141,12 +133,12 @@ function App() {
       </header>
       <div className="app-body" onKeyDown={handleListKeyDown}>
         <main className="app-main">
-          <OrderTable
+          <MemoOrderTable
             orders={filtered}
             activeOrderNumber={active}
             selectedOrderNumber={selected}
-            onRowClick={openOrder}
-            onRowFocus={onRowFocus}
+            onRowClick={handleRowClick}
+            onRowFocus={handleRowFocus}
           />
         </main>
         {selectedOrder ? (
