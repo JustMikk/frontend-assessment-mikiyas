@@ -203,3 +203,45 @@ body {
 .order-panel-body dd {
   margin: 0;
 }
+
+@media print {
+  .filters,
+  .order-panel {
+    display: none !important;
+  }
+
+  html,
+  body,
+  #root,
+  .app,
+  .app-body,
+  .app-main {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .app-body {
+    display: block;
+  }
+
+  .app-main {
+    padding: 0;
+  }
+
+  .order-table th {
+    position: static;
+  }
+
+  .order-table tbody tr {
+    break-inside: avoid;
+  }
+
+  .order-table tbody tr.is-active,
+  .order-table tbody tr.is-selected,
+  .order-table tbody tr.is-active.is-selected {
+    outline: none;
+    background: transparent;
+  }
+}
+
