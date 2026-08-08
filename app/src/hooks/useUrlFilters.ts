@@ -33,18 +33,19 @@ function writeSearch(params: URLSearchParams, mode: 'push' | 'replace') {
 function parseFilters(search: string) {
   const params = new URLSearchParams(search)
   const query = params.get('q') ?? ''
+  const selected = params.get('selected') ?? ''
   const statuses = params
     .getAll('status')
     .filter((value): value is OrderStatus =>
       ALL_STATUSES.includes(value as OrderStatus),
     )
-  return { query, statuses }
+  return { query, statuses, selected }
 }
 
-/** Filter state is the URL. No useEffect — subscribe via useSyncExternalStore. */
+/** Filter/selection state is the URL. No useEffect — subscribe via useSyncExternalStore. */
 export function useUrlFilters() {
   const search = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
-  const { query, statuses } = parseFilters(search)
+  const { query, statuses, selected } = parseFilters(search)
 
   function setQuery(next: string) {
     const params = new URLSearchParams(window.location.search)
@@ -64,5 +65,12 @@ export function useUrlFilters() {
     writeSearch(params, 'push')
   }
 
-  return { query, statuses, setQuery, toggleStatus }
+  function setSelected(orderNumber: string | null) {
+    const params = new URLSearchParams(window.location.search)
+    if (orderNumber) params.set('selected', orderNumber)
+    else params.delete('selected')
+    writeSearch(params, 'push')
+  }
+
+  return { query, statuses, selected, setQuery, toggleStatus, setSelected }
 }

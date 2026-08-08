@@ -102,6 +102,13 @@ body {
 .app-main {
   flex: 1;
   padding: 16px;
+  min-width: 0;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
 }
 
 .order-table {
@@ -125,6 +132,64 @@ body {
   border-bottom: 2px solid var(--border);
 }
 
+.order-table tbody tr {
+  cursor: pointer;
+}
+
 .order-table tbody tr:hover {
   background: #f5f5f5;
+}
+
+.order-table tbody tr.is-selected {
+  background: #e8f0fe;
+}
+
+.order-panel {
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--bg);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.order-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.order-panel-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.order-panel-close {
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.order-panel-body {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.order-panel-body div {
+  display: grid;
+  gap: 2px;
+}
+
+.order-panel-body dt {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.order-panel-body dd {
+  margin: 0;
 }
